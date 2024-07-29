@@ -6,31 +6,14 @@
       [ring.util.response :as response]
       [metrics-test.core :refer [registry update-record-duration]]))
 
-(defonce exception-counter
-         (prometheus/counter :app/exceptions
-                             {:description "Number of exceptions"}))
-
-(prometheus/register registry exception-counter)
-
 (defn metrics-handler []
       (prometheus-ring/metrics-response registry))
-
-(defn wrap-exception-handler [handler]
-      (fn [request]
-          (try
-            (handler request)
-            (catch Exception e
-              (prometheus/inc exception-counter)
-              (throw e)))))
 
 (defn app []
       (-> (fn [request]
               (case (:uri request)
                     "/metrics" (metrics-handler)
-                    (response/not-found "Not Found")))
-          ;(wrap-exception-handler)
-          ;(prometheus-ring/wrap-metrics registry)
-          ))
+                    (response/not-found "Not Found")))))
 
 (defn -main []
       (update-record-duration) ;; Example of recording some metrics
